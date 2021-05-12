@@ -1,7 +1,6 @@
 import logging
-import os
 import tweepy
-from tweepy import OAuthHandler
+import tweepy
 from os import environ
 import telegram
 from datetime import date, timedelta
@@ -11,11 +10,12 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 access_token = environ['access_token']
 access_token_secret = environ['access_token_secret']
 consumer_key = environ['consumer_key']
 consumer_secret = environ['consumer_secret']
-http_api = '1861020319:AAF8FdbUufg4Gxo_1k5xXUgn2h4Q34m7Yoo'
+http_api = environ['http_api']
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token,access_token_secret)
 
@@ -24,7 +24,16 @@ tweets = []
 dt = date.today() - timedelta(1)
 userID = "ayudh_india"
 
-def menu(update: Update, _: CallbackContext) -> None:
+
+def city(update, context,*args):
+    city=context.args[0]
+    update.message.reply_text("The city has been set as:"+city+"\nEnter /count for number of tweets")
+    f = open("city.txt", "w")
+    f.write(city)
+    f.close()
+
+
+def numberOfTweets(update: Update, _: CallbackContext) -> None:
     keyboard = [
         [
             InlineKeyboardButton("5", callback_data=5),
@@ -37,57 +46,27 @@ def menu(update: Update, _: CallbackContext) -> None:
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Select maximum number of tweets: ', reply_markup=reply_markup)
 
-    update.message.reply_text('Please choose one of the following :', reply_markup=reply_markup)
 
-def scraper(city)
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
-
-tweets = api.user_timeline(screen_name=userID, 
+def scraper(city):
+    tweets = api.user_timeline(screen_name=userID, 
                            count=100,
                            include_rts = False,
                            tweet_mode = 'extended'
-                           )
+                          )
 
-fetched_tweets= []
-i=0
-while (i<100):
-    dict= dict.append({tweet.id_str,tweet.full_text.encode("utf-8").decode("utf-8")})
-    i= i+1
-for k,v in dict.items():
-    if(v.find(city)):
-        fetched_tweets.append(k)
-        
-        
+    tweet_handler={}
+    fetched_tweets= []
 
-def city(update, context,*args):
-    city=context.args[0]
-    update.message.reply_text("The city has been set as:"+city+"\nEnter /menu for the options")
-    f = open("city.txt", "w")
-    f.write(city)
-    f.close()
+    for tweet in tweets:
+        tweet_handler[tweet.id_str]= tweet.full_text.encode("utf-8").decode("utf-8")
 
-def scrapetweets(city):
-    
-    new_search = "verified "+ city
-    link=[]
+    for k,v in tweet_handler.items():
+        if city.lower() in v.lower():
+            fetched_tweets.append(k)
+    return fetched_tweets
 
-    for tweet in tweepy.Cursor(api.search, q=new_search, lang="en",count=100,since=dt).items(int(data[0])):
-
-        try: 
-            data = [tweet.id]
-            link.append(f"https://twitter.com/ayudh_india"+str(data[0]))
-        
-        except tweepy.TweepError as e:
-            print(e.reason)
-            continue
-
-        except StopIteration:
-            break
-
-    return link
 
 def button(update: Update, _: CallbackContext) -> None:
 
@@ -103,36 +82,28 @@ def button(update: Update, _: CallbackContext) -> None:
     if(city=='%20'or city==''):
         city='India'
 
-    link=scrapetweets(city,str(query.data))
+    tweet_ids=scraper(city)
+    counter=0
+    for i in range(len(tweet_ids)):
+        counter= counter+1
+        links= 'https://twitter.com/ayudh_india/status/'+tweet_ids[i]
+        bot.sendMessage(update.effective_user.id,text=links)
+        if counter==int(query.data):
+            break
     
-    if (len(link)>0):
-        bot.sendMessage(update.effective_user.id,text=f"{len(link)} 𝐫𝐞𝐜𝐞𝐧𝐭 𝐭𝐰𝐞𝐞𝐭𝐬 𝐚𝐫𝐞:\n")
-    else:
-        bot.sendMessage(update.effective_user.id,text=f"𝐒𝐨𝐫𝐫𝐲, 𝐍𝐨 𝐫𝐞𝐜𝐞𝐧𝐭 𝐭𝐰𝐞𝐞𝐭𝐬 𝐰𝐞𝐫𝐞 𝐟𝐨𝐮𝐧𝐝\n")
+    bot.sendMessage(update.effective_user.id,text="Number of Tweets found: " + str(counter))
 
-    for i in link:
-        bot.sendMessage(update.effective_user.id,text=i)
-
-    
-    search=f"https://twitter.com/ayudh_india/search?q=verified%20"+city+":retweets&f=live"
-    
-    bot.sendMessage(update.effective_user.id,text="𝐓𝐨 𝐯𝐢𝐞𝐰 𝐚𝐥𝐥 𝐭𝐡𝐞 𝐫𝐞𝐬𝐮𝐥𝐭𝐬 𝐜𝐥𝐢𝐜𝐤 𝐭𝐡𝐢𝐬 𝐥𝐢𝐧𝐤:\n")
-    bot.sendMessage(update.effective_user.id,text=search)
-
-    
-    
     
 
 def help_command(update: Update, _: CallbackContext) -> None:
-    update.message.reply_text("Use /city CITY NAME to enter the city name.\nUse /menu to start using the covid resource bot")
+    update.message.reply_text("Use /city CITY NAME to enter the city name.\nUse /numberOfTweets to choose number of tweets")
 
 
 def main() -> None:
     
-
     updater = Updater(http_api)
     updater.dispatcher.add_handler(CommandHandler('city', city))
-    updater.dispatcher.add_handler(CommandHandler('menu', menu))
+    updater.dispatcher.add_handler(CommandHandler('count', numberOfTweets))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
     updater.dispatcher.add_handler(CommandHandler('help', help_command))
 
@@ -146,4 +117,3 @@ if __name__ == '__main__':
     f.write(' ')
     f.close()
     main()
-
