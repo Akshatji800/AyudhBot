@@ -40,6 +40,7 @@ def menu(update: Update, _: CallbackContext) -> None:
 
     update.message.reply_text('Please choose one of the following :', reply_markup=reply_markup)
 
+def scraper(city)
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
@@ -49,10 +50,17 @@ tweets = api.user_timeline(screen_name=userID,
                            include_rts = False,
                            tweet_mode = 'extended'
                            )
+
+fetched_tweets= []
 i=0
 while (i<100):
     dict= dict.append({tweet.id_str,tweet.full_text.encode("utf-8").decode("utf-8")})
-
+    i= i+1
+for k,v in dict.items():
+    if(v.find(city)):
+        fetched_tweets.append(k)
+        
+        
 
 def city(update, context,*args):
     city=context.args[0]
