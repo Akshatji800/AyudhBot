@@ -22,6 +22,7 @@ auth.set_access_token(access_token,access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 tweets = []
 dt = date.today() - timedelta(1)
+userID = "ayudh_india"
 
 def menu(update: Update, _: CallbackContext) -> None:
     keyboard = [
@@ -38,6 +39,20 @@ def menu(update: Update, _: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text('Please choose one of the following :', reply_markup=reply_markup)
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
+tweets = api.user_timeline(screen_name=userID, 
+                           count=100,
+                           include_rts = False,
+                           tweet_mode = 'extended'
+                           )
+i=0
+while (i<100):
+    dict= dict.append({tweet.id_str,tweet.full_text.encode("utf-8").decode("utf-8")})
+
 
 def city(update, context,*args):
     city=context.args[0]
