@@ -98,10 +98,13 @@ def button(update: Update, _: CallbackContext) -> None:
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("Use /city CITY NAME to enter the city name.\nUse /numberOfTweets to choose number of tweets")
 
+def bot_intro(update: Update, _: CallbackContext) -> None:
+    update.message.reply_text("HI, User I am ayudhfightscovidBot 'Helping Ayudh to fight and help people in Covid times'. To use me just type /place <PLACE NAME> and then type /count and choose the number of tweets you want from the options available ")
 
 def main() -> None:
     
     updater = Updater(http_api)
+    updater.dispatcher.add_handler(CommandHandler('start', bot_intro))
     updater.dispatcher.add_handler(CommandHandler('city', city))
     updater.dispatcher.add_handler(CommandHandler('count', numberOfTweets))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
