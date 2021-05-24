@@ -26,7 +26,10 @@ userID = "ayudh_india"
 
 
 def city(update, context,*args):
-    city=context.args[0]
+    try:
+        city=context.args[0]
+    except:
+        update.message.reply_text("Hey, User I also need the name of a city after /city. Let me give you an example: /city mumbai")
     update.message.reply_text("The city has been set as:"+city+"\nEnter /count for number of tweets")
     f = open("city.txt", "w")
     f.write(city)
